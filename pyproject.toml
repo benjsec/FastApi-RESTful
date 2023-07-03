@@ -39,14 +39,15 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.7"
 
+python = "^3.7"
 fastapi = ">=0.89,<1.0"
-pydantic = "^1.0,<2.0"
+pydantic = "^2.0"
 sqlalchemy =  { version = "^1.4,<2.0", optional = true }
 psutil = "^5"
+pydantic-settings = "^2.0.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 # Starlette features
 aiofiles = "*"  # Serving static files
 httpx = "*"  # TestClient

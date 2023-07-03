@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Any
 
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 
 class APISettings(BaseSettings):
@@ -50,7 +50,9 @@ class APISettings(BaseSettings):
             "version": self.version,
         }
         if self.disable_docs:
-            fastapi_kwargs.update({"docs_url": None, "openapi_url": None, "redoc_url": None})
+            fastapi_kwargs.update(
+                {"docs_url": None, "openapi_url": None, "redoc_url": None}
+            )
         return fastapi_kwargs
 
     class Config:

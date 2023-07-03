@@ -1,9 +1,20 @@
 import inspect
-from typing import Any, Callable, List, Tuple, Type, TypeVar, Union, cast, get_type_hints
+from typing import (
+    Any,
+    Callable,
+    List,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+    get_type_hints,
+)
 
 from fastapi import APIRouter, Depends
 from fastapi.routing import APIRoute
-from pydantic.typing import is_classvar
+
+from pydantic.v1.typing import is_classvar
 from starlette.routing import Route, WebSocketRoute
 
 T = TypeVar("T")
@@ -32,7 +43,9 @@ def cbv(router: APIRouter, *urls: str) -> Callable[[Type[T]], Type[T]]:
     return decorator
 
 
-def _cbv(router: APIRouter, cls: Type[T], *urls: str, instance: Any = None) -> Type[T]:
+def _cbv(
+    router: APIRouter, cls: Type[T], *urls: str, instance: Any = None
+) -> Type[T]:
     """
     Replaces any methods of the provided class `cls` that are endpoints of routes in `router` with updated
     function calls that will properly inject an instance of `cls`.
@@ -52,9 +65,14 @@ def _init_cbv(cls: Type[Any], instance: Any = None) -> None:
         return  # Already initialized
     old_init: Callable[..., Any] = cls.__init__
     old_signature = inspect.signature(old_init)
-    old_parameters = list(old_signature.parameters.values())[1:]  # drop `self` parameter
+    old_parameters = list(old_signature.parameters.values())[
+        1:
+    ]  # drop `self` parameter
     new_parameters = [
-        x for x in old_parameters if x.kind not in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD)
+        x
+        for x in old_parameters
+        if x.kind
+        not in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD)
     ]
 
     dependency_names: List[str] = []
@@ -64,7 +82,12 @@ def _init_cbv(cls: Type[Any], instance: Any = None) -> None:
         parameter_kwargs = {"default": getattr(cls, name, Ellipsis)}
         dependency_names.append(name)
         new_parameters.append(
-            inspect.Parameter(name=name, kind=inspect.Parameter.KEYWORD_ONLY, annotation=hint, **parameter_kwargs)
+            inspect.Parameter(
+                name=name,
+                kind=inspect.Parameter.KEYWORD_ONLY,
+                annotation=hint,
+                **parameter_kwargs,
+            )
         )
     new_signature = inspect.Signature(())
     if not instance or hasattr(cls, INCLUDE_INIT_PARAMS_KEY):
@@ -100,15 +123,20 @@ def _register_endpoints(router: APIRouter, cls: Type[Any], *urls: str) -> None:
         router_roles.append((route.path, tuple(route_methods)))
 
     if len(set(router_roles)) != len(router_roles):
-        raise Exception("An identical route role has been implemented more then once")
+        raise Exception(
+            "An identical route role has been implemented more then once"
+        )
 
     functions_set = {func for _, func in function_members}
     cbv_routes = [
         route
         for route in router.routes
-        if isinstance(route, (Route, WebSocketRoute)) and route.endpoint in functions_set
+        if isinstance(route, (Route, WebSocketRoute))
+        and route.endpoint in functions_set
     ]
-    prefix_length = len(router.prefix)  # Until 'black' would fix an issue which causes PEP8: E203
+    prefix_length = len(
+        router.prefix
+    )  # Until 'black' would fix an issue which causes PEP8: E203
     for route in cbv_routes:
         router.routes.remove(route)
         route.path = route.path[prefix_length:]
@@ -117,12 +145,20 @@ def _register_endpoints(router: APIRouter, cls: Type[Any], *urls: str) -> None:
     router.include_router(cbv_router)
 
 
-def _allocate_routes_by_method_name(router: APIRouter, url: str, function_members: List[Tuple[str, Any]]) -> None:
+def _allocate_routes_by_method_name(
+    router: APIRouter, url: str, function_members: List[Tuple[str, Any]]
+) -> None:
     existing_routes_endpoints: List[Tuple[Any, str]] = [
-        (route.endpoint, route.path) for route in router.routes if isinstance(route, APIRoute)
+        (route.endpoint, route.path)
+        for route in router.routes
+        if isinstance(route, APIRoute)
     ]
     for name, func in function_members:
-        if hasattr(router, name) and not name.startswith("__") and not name.endswith("__"):
+        if (
+            hasattr(router, name)
+            and not name.startswith("__")
+            and not name.endswith("__")
+        ):
             if (func, url) not in existing_routes_endpoints:
                 response_model = None
                 responses = None
@@ -130,7 +166,12 @@ def _allocate_routes_by_method_name(router: APIRouter, url: str, function_member
                 status_code = 200
                 return_types_func = getattr(func, RETURN_TYPES_FUNC_KEY, None)
                 if return_types_func:
-                    response_model, status_code, responses, kwargs = return_types_func()
+                    (
+                        response_model,
+                        status_code,
+                        responses,
+                        kwargs,
+                    ) = return_types_func()
 
                 api_resource = router.api_route(
                     url,
@@ -143,17 +184,22 @@ def _allocate_routes_by_method_name(router: APIRouter, url: str, function_member
                 api_resource(func)
 
 
-def _update_cbv_route_endpoint_signature(cls: Type[Any], route: Union[Route, WebSocketRoute]) -> None:
+def _update_cbv_route_endpoint_signature(
+    cls: Type[Any], route: Union[Route, WebSocketRoute]
+) -> None:
     """
     Fixes the endpoint signature for a cbv route to ensure FastAPI performs dependency injection properly.
     """
     old_endpoint = route.endpoint
     old_signature = inspect.signature(old_endpoint)
-    old_parameters: List[inspect.Parameter] = list(old_signature.parameters.values())
+    old_parameters: List[inspect.Parameter] = list(
+        old_signature.parameters.values()
+    )
     old_first_parameter = old_parameters[0]
     new_first_parameter = old_first_parameter.replace(default=Depends(cls))
     new_parameters = [new_first_parameter] + [
-        parameter.replace(kind=inspect.Parameter.KEYWORD_ONLY) for parameter in old_parameters[1:]
+        parameter.replace(kind=inspect.Parameter.KEYWORD_ONLY)
+        for parameter in old_parameters[1:]
     ]
 
     new_signature = old_signature.replace(parameters=new_parameters)

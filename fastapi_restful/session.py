@@ -59,7 +59,9 @@ class FastAPISessionMaker:
         """
         return get_engine(self.database_uri)
 
-    def get_new_sessionmaker(self, engine: sa.engine.Engine | None) -> sa.orm.sessionmaker:
+    def get_new_sessionmaker(
+        self, engine: sa.engine.Engine | None
+    ) -> sa.orm.sessionmaker:
         """
         Returns a new sessionmaker for the provided sqlalchemy engine. If no engine is provided, the
         instance's (lazily-cached) engine is used.

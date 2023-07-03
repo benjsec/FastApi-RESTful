@@ -18,9 +18,15 @@ def app() -> FastAPI:
 
 
 def test_base_spec(app: FastAPI) -> None:
-    assert app.openapi()["paths"]["/endpoint-path"]["get"]["operationId"] == "endpoint_name_endpoint_path_get"
+    assert (
+        app.openapi()["paths"]["/endpoint-path"]["get"]["operationId"]
+        == "endpoint_name_endpoint_path_get"
+    )
 
 
 def test_simplify_spec(app: FastAPI) -> None:
     simplify_operation_ids(app)
-    assert app.openapi()["paths"]["/endpoint-path"]["get"]["operationId"] == "endpoint_name"
+    assert (
+        app.openapi()["paths"]["/endpoint-path"]["get"]["operationId"]
+        == "endpoint_name"
+    )

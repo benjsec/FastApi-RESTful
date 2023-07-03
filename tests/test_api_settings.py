@@ -15,8 +15,12 @@ def get_app() -> FastAPI:
     return FastAPI(**api_settings.fastapi_kwargs)
 
 
-@pytest.mark.parametrize("disable_docs,status_code", [("1", HTTP_404_NOT_FOUND), ("0", HTTP_200_OK)])
-def test_enable_docs(monkeypatch: MonkeyPatch, disable_docs: str, status_code: int) -> None:
+@pytest.mark.parametrize(
+    "disable_docs,status_code", [("1", HTTP_404_NOT_FOUND), ("0", HTTP_200_OK)]
+)
+def test_enable_docs(
+    monkeypatch: MonkeyPatch, disable_docs: str, status_code: int
+) -> None:
     monkeypatch.setenv("API_DISABLE_DOCS", disable_docs)
     app = get_app()
     response = TestClient(app).get("/docs")

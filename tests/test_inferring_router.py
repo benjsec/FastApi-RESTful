@@ -12,7 +12,9 @@ OpenapiSchemaType = Dict[str, Any]
 
 
 def get_response_schema(
-    openapi_spec: OpenapiSchemaType, endpoint_path: str, expected_status_code: int = 200
+    openapi_spec: OpenapiSchemaType,
+    endpoint_path: str,
+    expected_status_code: int = 200,
 ) -> OpenapiSchemaType:
     responses = openapi_spec["paths"][endpoint_path]["get"]["responses"]
     content = responses[str(expected_status_code)].get("content")
@@ -28,7 +30,9 @@ class TestInferringRouter:
     def inferring_router(self) -> InferringRouter:
         return InferringRouter()
 
-    def test_inferring_route(self, app: FastAPI, inferring_router: InferringRouter) -> None:
+    def test_inferring_route(
+        self, app: FastAPI, inferring_router: InferringRouter
+    ) -> None:
         @inferring_router.get("/return_string")
         def endpoint_1() -> str:  # pragma: no cover
             return ""
@@ -39,5 +43,11 @@ class TestInferringRouter:
 
         app.include_router(inferring_router)
         openapi_spec = app.openapi()
-        assert get_response_schema(openapi_spec, "/return_string")["type"] == "string"
-        assert get_response_schema(openapi_spec, "/return_integer")["type"] == "integer"
+        assert (
+            get_response_schema(openapi_spec, "/return_string")["type"]
+            == "string"
+        )
+        assert (
+            get_response_schema(openapi_spec, "/return_integer")["type"]
+            == "integer"
+        )

@@ -26,7 +26,10 @@ TIMER_ATTRIBUTE = "__fastapi_utils_timer__"
 
 
 def add_timing_middleware(
-    app: FastAPI, record: Callable[[str], None] | None = None, prefix: str = "", exclude: str | None = None
+    app: FastAPI,
+    record: Callable[[str], None] | None = None,
+    prefix: str = "",
+    exclude: str | None = None,
 ) -> None:
     """
     Adds a middleware to the provided `app` that records timing metrics using the provided `record` callable.
@@ -44,7 +47,9 @@ def add_timing_middleware(
     metric_namer = _MetricNamer(prefix=prefix, app=app)
 
     @app.middleware("http")
-    async def timing_middleware(request: Request, call_next: RequestResponseEndpoint) -> Response:
+    async def timing_middleware(
+        request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
         metric_name = metric_namer(request.scope)
         with _TimingStats(metric_name, record=record, exclude=exclude) as timer:
             setattr(request.state, TIMER_ATTRIBUTE, timer)
@@ -86,7 +91,10 @@ class _TimingStats:
     """
 
     def __init__(
-        self, name: str | None = None, record: Callable[[str], None] | None = None, exclude: str | None = None
+        self,
+        name: str | None = None,
+        record: Callable[[str], None] | None = None,
+        exclude: str | None = None,
     ) -> None:
         self.name = name
         self.record = record or print
@@ -98,7 +106,11 @@ class _TimingStats:
         self.end_time: float = 0
         self.silent: bool = False
 
-        if self.name is not None and exclude is not None and (exclude in self.name):
+        if (
+            self.name is not None
+            and exclude is not None
+            and (exclude in self.name)
+        ):
             self.silent = True
 
     def start(self) -> None:
